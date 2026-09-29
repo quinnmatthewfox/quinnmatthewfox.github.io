@@ -2,6 +2,11 @@ name: Sync Substack posts
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/sync-substack.yml"
+      - "scripts/fetch_substack.py"
   schedule:
     - cron: "17 */6 * * *"
 
