@@ -19,7 +19,7 @@ function stripHtml(value) {
   return (div.textContent || div.innerText || "").replace(/\s+/g, " ").trim();
 }
 
-function excerpt(value, max = 180) {
+function makeExcerpt(value, max = 180) {
   const text = stripHtml(value);
   if (text.length <= max) return text;
   return text.slice(0, max - 1).replace(/\s+\S*$/, "") + "…";
@@ -33,6 +33,22 @@ function formatDate(value) {
     month: "long",
     year: "numeric"
   }).format(date);
+}
+
+function renderPosts(posts) {
+  postsContainer.innerHTML = posts.slice(0, 3).map((post) => {
+    const date = formatDate(post.date || post.pubDate);
+    const description = post.excerpt || makeExcerpt(post.description || post.content || "");
+    const url = post.url || post.link;
+    return `
+      <article class="post-card">
+        <p class="post-label">${escapeHtml(date || "Substack")}</p>
+        <h3>${escapeHtml(post.title || "Untitled")}</h3>
+        ${description ? `<p>${escapeHtml(description)}</p>` : ""}
+        <a href="${escapeHtml(url)}" target="_blank" rel="noopener">Read on Substack →</a>
+      </article>
+    `;
+  }).join("");
 }
 
 function renderFallback() {
@@ -49,33 +65,30 @@ function renderFallback() {
 async function loadSubstackPosts() {
   if (!postsContainer) return;
 
+  // Primary: static JSON refreshed by GitHub Actions.
+  try {
+    const local = await fetch("posts.json?ts=" + Date.now(), { cache: "no-store" });
+    if (local.ok) {
+      const data = await local.json();
+      if (Array.isArray(data.posts) && data.posts.length) {
+        renderPosts(data.posts);
+        return;
+      }
+    }
+  } catch (_) {}
+
+  // Secondary: browser-side RSS proxy.
   try {
     const response = await fetch(RSS2JSON_URL, { cache: "no-store" });
-    if (!response.ok) throw new Error("Could not reach feed service");
-
+    if (!response.ok) throw new Error("Feed proxy unavailable");
     const data = await response.json();
-    if (data.status !== "ok" || !Array.isArray(data.items)) {
-      throw new Error("Feed service returned no posts");
+    if (data.status === "ok" && Array.isArray(data.items) && data.items.length) {
+      renderPosts(data.items);
+      return;
     }
+  } catch (_) {}
 
-    const posts = data.items.slice(0, 3);
-    if (!posts.length) throw new Error("No posts available");
-
-    postsContainer.innerHTML = posts.map((post) => {
-      const date = formatDate(post.pubDate);
-      const description = excerpt(post.description || post.content || "");
-      return `
-        <article class="post-card">
-          <p class="post-label">${escapeHtml(date || "Substack")}</p>
-          <h3>${escapeHtml(post.title || "Untitled")}</h3>
-          ${description ? `<p>${escapeHtml(description)}</p>` : ""}
-          <a href="${escapeHtml(post.link)}" target="_blank" rel="noopener">Read on Substack →</a>
-        </article>
-      `;
-    }).join("");
-  } catch (error) {
-    renderFallback();
-  }
+  renderFallback();
 }
 
 loadSubstackPosts();
