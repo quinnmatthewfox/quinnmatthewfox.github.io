@@ -128,6 +128,8 @@ h3{font-size:1.5rem}
   padding:24px 0 6px;
 }
 .post-card a{color:var(--red);text-decoration:none}
+.post-card h3{margin-bottom:.55rem}
+.post-card p:not(.post-label){color:var(--muted);font-size:.94rem}
 .post-label,.small-note{color:var(--muted);font-size:.82rem}
 .about{
   display:grid;
