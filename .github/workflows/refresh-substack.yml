@@ -8,7 +8,7 @@ on:
       - ".github/workflows/refresh-substack.yml"
       - "scripts/fetch_substack.py"
   schedule:
-    - cron: "23 */6 * * *"
+    - cron: "23 */3 * * *"
 
 permissions:
   contents: write
@@ -20,13 +20,14 @@ jobs:
       - name: Check out site
         uses: actions/checkout@v4
 
-      - name: Fetch posts through RSS proxy
+      - name: Refresh posts (best effort)
+        continue-on-error: true
         run: python scripts/fetch_substack.py
 
       - name: Commit refreshed posts
         run: |
           if git diff --quiet posts.json; then
-            echo "No changes."
+            echo "No new posts to publish; cached feed remains in place."
             exit 0
           fi
           git config user.name "github-actions[bot]"
