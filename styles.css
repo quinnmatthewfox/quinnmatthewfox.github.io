@@ -39,12 +39,11 @@ nav a{
 nav a:hover{border-color:var(--red)}
 main{max-width:1180px;margin:0 auto;padding:0 32px}
 .hero{
-  min-height:78vh;
   display:grid;
-  grid-template-columns:1.05fr .95fr;
-  gap:64px;
+  grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);
+  gap:72px;
   align-items:center;
-  padding:72px 0;
+  padding:72px 0 88px;
 }
 .eyebrow{
   text-transform:uppercase;
@@ -59,10 +58,14 @@ h1,h2,h3{
   line-height:1.08;
   margin:.2em 0 .45em;
 }
-h1{font-size:clamp(3.6rem,8vw,7.5rem)}
+h1{font-size:clamp(3.6rem,7vw,6.4rem)}
 h2{font-size:clamp(2.2rem,4.5vw,4.2rem)}
 h3{font-size:1.5rem}
-.intro{max-width:620px;font-size:1.12rem}
+.hero-bio{
+  max-width:680px;
+  font-size:1.02rem;
+}
+.hero-bio p{margin:.55rem 0}
 .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
 .button{
   display:inline-block;
@@ -77,7 +80,7 @@ h3{font-size:1.5rem}
 .button.primary{background:var(--red);border-color:var(--red);color:#fffaf4}
 .button.ghost:hover{background:var(--ink);color:var(--paper)}
 .button.disabled{opacity:.45;cursor:not-allowed}
-.hero-art,
+.author-portrait,
 .book-art{
   margin:0;
   border:1px solid var(--line);
@@ -85,16 +88,20 @@ h3{font-size:1.5rem}
   overflow:hidden;
   box-shadow:0 16px 40px rgba(57,42,31,.08);
 }
-.hero-art{
+.author-portrait{
+  width:min(100%,360px);
   aspect-ratio:4/5;
-  min-height:520px;
+  justify-self:end;
 }
-.hero-art img,
+.author-portrait img,
 .book-art img{
   display:block;
   width:100%;
   height:100%;
   object-fit:cover;
+}
+.author-portrait img{
+  object-position:center top;
 }
 .section{
   padding:100px 0;
@@ -192,12 +199,6 @@ h3{font-size:1.5rem}
 .post-card h3{margin-bottom:.55rem}
 .post-card p:not(.post-label){color:var(--muted);font-size:.94rem}
 .post-label,.small-note{color:var(--muted);font-size:.82rem}
-.about{
-  display:grid;
-  grid-template-columns:.85fr 1.15fr;
-  gap:72px;
-}
-.about-copy{font-size:1.08rem}
 .newsletter{
   text-align:center;
   max-width:760px;
@@ -220,12 +221,15 @@ footer{
   .site-header{align-items:flex-start;gap:18px;flex-direction:column}
   nav{gap:16px}
   main{padding:0 20px}
-  .hero{grid-template-columns:1fr;gap:34px;min-height:auto;padding:48px 0 70px}
+  .hero{grid-template-columns:1fr;gap:34px;padding:48px 0 70px}
   h1{font-size:clamp(3.1rem,18vw,5.2rem)}
-  .hero-art{min-height:0}
+  .author-portrait{
+    width:min(82%,320px);
+    justify-self:start;
+  }
   .section{padding:72px 0}
   .section.alt{margin-left:-20px;margin-right:-20px;padding-left:20px;padding-right:20px}
-  .book-listing,.about{grid-template-columns:1fr;gap:36px}
+  .book-listing{grid-template-columns:1fr;gap:36px}
   .book-cover-photo,
   .book-details,
   .book-spread-photo{
