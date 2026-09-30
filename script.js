@@ -35,17 +35,25 @@ function formatDate(value) {
   }).format(date);
 }
 
+function normalise(items, source) {
+  return items.slice(0, 3).map((post) => ({
+    title: post.title || "Untitled",
+    url: post.url || post.link,
+    date: post.date || post.pubDate || "",
+    excerpt: post.excerpt || makeExcerpt(post.description || post.content || ""),
+    source
+  })).filter((post) => post.url);
+}
+
 function renderPosts(posts) {
   postsContainer.innerHTML = posts.slice(0, 3).map((post) => {
-    const date = formatDate(post.date || post.pubDate);
-    const description = post.excerpt || makeExcerpt(post.description || post.content || "");
-    const url = post.url || post.link;
+    const date = formatDate(post.date);
     return `
       <article class="post-card">
         <p class="post-label">${escapeHtml(date || "Substack")}</p>
-        <h3>${escapeHtml(post.title || "Untitled")}</h3>
-        ${description ? `<p>${escapeHtml(description)}</p>` : ""}
-        <a href="${escapeHtml(url)}" target="_blank" rel="noopener">Read on Substack →</a>
+        <h3>${escapeHtml(post.title)}</h3>
+        ${post.excerpt ? `<p>${escapeHtml(post.excerpt)}</p>` : ""}
+        <a href="${escapeHtml(post.url)}" target="_blank" rel="noopener">Read on Substack →</a>
       </article>
     `;
   }).join("");
@@ -65,30 +73,37 @@ function renderFallback() {
 async function loadSubstackPosts() {
   if (!postsContainer) return;
 
-  // Primary: static JSON refreshed by GitHub Actions.
+  let cached = [];
+
   try {
     const local = await fetch("posts.json?ts=" + Date.now(), { cache: "no-store" });
     if (local.ok) {
       const data = await local.json();
       if (Array.isArray(data.posts) && data.posts.length) {
-        renderPosts(data.posts);
-        return;
+        cached = normalise(data.posts, "cache");
+        renderPosts(cached);
       }
     }
   } catch (_) {}
 
-  // Secondary: browser-side RSS proxy.
+  // Opportunistically ask the browser-side proxy too. If it has a newer
+  // first post than the cache, show it immediately; otherwise keep the cache.
   try {
     const response = await fetch(RSS2JSON_URL, { cache: "no-store" });
     if (!response.ok) throw new Error("Feed proxy unavailable");
     const data = await response.json();
     if (data.status === "ok" && Array.isArray(data.items) && data.items.length) {
-      renderPosts(data.items);
-      return;
+      const live = normalise(data.items, "live");
+      const liveDate = new Date(live[0]?.date || 0).getTime();
+      const cachedDate = new Date(cached[0]?.date || 0).getTime();
+      if (!cached.length || liveDate > cachedDate || live[0]?.url !== cached[0]?.url) {
+        renderPosts(live);
+        return;
+      }
     }
   } catch (_) {}
 
-  renderFallback();
+  if (!cached.length) renderFallback();
 }
 
 loadSubstackPosts();
