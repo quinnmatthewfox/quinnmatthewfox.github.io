@@ -2,13 +2,15 @@
 import html
 import json
 import re
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 
 PUB = "https://quinnmatthewfox.substack.com"
-API_URL = PUB + "/api/v1/posts?limit=3&offset=0"
+ARCHIVE_API = PUB + "/api/v1/archive?sort=new&search=&offset=0&limit=3"
 FEED_URL = PUB + "/feed"
 OUTPUT = "posts.json"
 
@@ -27,19 +29,35 @@ def plain_text(value):
     text = " ".join(parser.parts)
     return re.sub(r"\s+", " ", text).strip()
 
-def fetch_json(url):
-    req = urllib.request.Request(
-        url,
-        headers={
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140 Safari/537.36",
-            "Accept": "application/json,text/plain,*/*",
-            "Referer": PUB + "/",
-        },
-    )
-    with urllib.request.urlopen(req, timeout=30) as response:
-        return json.load(response)
+def get_text(url, attempts=1):
+    last = None
+    for n in range(attempts):
+        try:
+            req = urllib.request.Request(
+                url,
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/140 Safari/537.36",
+                    "Accept": "application/json,text/plain,text/html,*/*",
+                    "Referer": PUB + "/",
+                },
+            )
+            with urllib.request.urlopen(req, timeout=30) as response:
+                return response.read().decode("utf-8", errors="replace")
+        except urllib.error.HTTPError as exc:
+            last = exc
+            # Don't waste retries on a hard block.
+            if exc.code in (401, 403):
+                break
+            if n < attempts - 1:
+                time.sleep(3 * (n + 1))
+        except Exception as exc:
+            last = exc
+            if n < attempts - 1:
+                time.sleep(3 * (n + 1))
+    raise last
 
-def normalise_substack(data):
+def parse_archive_json(text):
+    data = json.loads(text)
     if isinstance(data, dict) and isinstance(data.get("contents"), str):
         data = json.loads(data["contents"])
     if isinstance(data, dict) and isinstance(data.get("posts"), list):
@@ -78,7 +96,8 @@ def normalise_substack(data):
             out.append({"title": title, "url": url, "date": date, "excerpt": desc})
     return out
 
-def normalise_rss2json(data):
+def parse_rss2json(text):
+    data = json.loads(text)
     if not isinstance(data, dict) or data.get("status") != "ok":
         return []
     out = []
@@ -93,19 +112,37 @@ def normalise_rss2json(data):
             out.append({"title": title, "url": url, "date": date, "excerpt": desc})
     return out
 
+def parse_jina_markdown(text):
+    # Last-resort reader proxy: collect unique public post links from the archive page.
+    pattern = re.compile(r"\[([^\]]+)\]\((https?://quinnmatthewfox\.substack\.com/p/[^)\s?#]+)[^)]*\)")
+    out = []
+    seen = set()
+    for title, url in pattern.findall(text):
+        url = url.rstrip("/")
+        if url in seen:
+            continue
+        clean_title = plain_text(title)
+        if not clean_title or clean_title.lower() in {"comments", "read more"}:
+            continue
+        seen.add(url)
+        out.append({"title": clean_title, "url": url, "date": "", "excerpt": ""})
+        if len(out) == 3:
+            break
+    return out
+
 strategies = [
-    ("direct Substack API", API_URL, normalise_substack),
-    ("AllOrigins", "https://api.allorigins.win/get?url=" + urllib.parse.quote(API_URL, safe=""), normalise_substack),
-    ("EveryOrigin", "https://everyorigin.jwvbremen.nl/get?url=" + urllib.parse.quote(API_URL, safe=""), normalise_substack),
-    ("RSS2JSON", "https://api.rss2json.com/v1/api.json?rss_url=" + urllib.parse.quote(FEED_URL, safe=""), normalise_rss2json),
+    ("direct Substack archive", ARCHIVE_API, parse_archive_json, 1),
+    ("RSS2JSON", "https://api.rss2json.com/v1/api.json?rss_url=" + urllib.parse.quote(FEED_URL, safe=""), parse_rss2json, 3),
+    ("AllOrigins archive", "https://api.allorigins.win/get?url=" + urllib.parse.quote(ARCHIVE_API, safe=""), parse_archive_json, 2),
+    ("Jina reader", "https://r.jina.ai/http://quinnmatthewfox.substack.com/archive", parse_jina_markdown, 2),
 ]
 
 posts = []
 errors = []
-for name, url, parser in strategies:
+for name, url, parser, attempts in strategies:
     try:
-        data = fetch_json(url)
-        posts = parser(data)
+        raw = get_text(url, attempts=attempts)
+        posts = parser(raw)
         if posts:
             print(f"Success via {name}: {len(posts)} posts")
             break
@@ -114,7 +151,11 @@ for name, url, parser in strategies:
         errors.append(f"{name}: {type(exc).__name__}: {exc}")
 
 if not posts:
-    raise RuntimeError("All Substack fetch methods failed:\n" + "\n".join(errors))
+    # Important: keep the last known-good posts.json rather than failing the job.
+    print("No source was reachable this run; keeping cached posts.")
+    for error in errors:
+        print(" - " + error)
+    raise SystemExit(0)
 
 payload = {
     "updated_at": datetime.now(timezone.utc).isoformat(),
