@@ -12,7 +12,9 @@
 </head>
 <body>
   <header class="site-header">
-    <a class="brand" href="#top">Quinn M. Fox</a>
+    <a class="brand brand-logo" href="#top" aria-label="Quinn M. Fox home">
+      <img src="images/site-logo.png" alt="Quinn M. Fox">
+    </a>
     <nav aria-label="Primary">
       <a href="#books">Books</a>
       <a href="#writing">Writing</a>
@@ -24,15 +26,15 @@
   <main id="top">
     <section id="about" class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Children’s writer · poet · illustrator</p>
+        <p class="eyebrow">Quinn M. Fox</p>
         <h1>Stories, poems<br>and all sorts.</h1>
         <div class="hero-bio">
           <p>Quinn M. Fox writes and illustrates children’s stories and poetry, with a fondness for talking animals, fairy-country, small adventures, and the strange logic of childhood.</p>
           <p>Here you’ll find books, new writing, illustrations, and occasional publishing news.</p>
         </div>
         <div class="actions">
-          <a class="button primary" href="#books">Explore the books</a>
-          <a class="button ghost" href="https://quinnmatthewfox.substack.com/" target="_blank" rel="noopener">Read the Substack</a>
+          <a class="button primary" href="#books">Explore the books <span aria-hidden="true">→</span></a>
+          <a class="button ghost" href="https://quinnmatthewfox.substack.com/" target="_blank" rel="noopener">Read the Substack <span aria-hidden="true">→</span></a>
         </div>
       </div>
       <figure class="author-portrait">
@@ -40,17 +42,24 @@
       </figure>
     </section>
 
+    <aside class="quote-band" aria-label="George MacDonald quotation">
+      <blockquote>“Man may, if he pleases, invent a little world of his own, with its own laws.”</blockquote>
+      <p>— George MacDonald</p>
+    </aside>
+
     <section id="books" class="section">
-      <div class="section-heading">
-        <p class="eyebrow">Books</p>
-        <h2>Orts &amp; Allsorts</h2>
+      <div class="section-title-row">
+        <h2>Books</h2>
+        <span class="section-rule" aria-hidden="true"></span>
       </div>
-      <div class="book-listing">
+
+      <article class="book-listing">
         <figure class="book-art book-cover-photo">
           <img src="images/cover-bookshelf.png" alt="Orts & Allsorts displayed on a bookshelf.">
         </figure>
 
         <div class="book-details">
+          <h3 class="book-title">Orts &amp; Allsorts</h3>
           <p class="kicker">Poems for Children &amp; the Childlike</p>
           <p><em>Orts &amp; Allsorts</em> is a collection of playful poems, odd creatures, small adventures and illustrated nonsense.</p>
 
@@ -68,13 +77,13 @@
           <img src="images/bumblehorse-spread.png" alt="Open spread from Orts & Allsorts showing the Bumblehorse poem and illustration.">
           <figcaption>Inside <em>Orts &amp; Allsorts</em></figcaption>
         </figure>
-      </div>
+      </article>
     </section>
 
     <section id="writing" class="section alt">
-      <div class="section-heading">
-        <p class="eyebrow">Latest writing</p>
+      <div class="section-title-row">
         <h2>From the Substack</h2>
+        <span class="section-rule" aria-hidden="true"></span>
       </div>
       <div id="posts" class="posts" aria-live="polite">
         <article class="post-card">
