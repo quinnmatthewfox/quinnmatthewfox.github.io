@@ -108,39 +108,44 @@ h3{font-size:1.5rem}
   background:rgba(255,255,255,.18);
 }
 .section-heading{margin-bottom:46px}
-.book-showcase{
+.book-listing{
   display:grid;
-  grid-template-columns:minmax(0,1.45fr) minmax(280px,.65fr);
-  gap:54px;
+  grid-template-columns:minmax(300px,.9fr) minmax(320px,1.1fr);
+  gap:54px 64px;
   align-items:start;
 }
-.book-visuals{
-  display:grid;
-  grid-template-columns:minmax(220px,.72fr) minmax(300px,1.28fr);
-  gap:22px;
-  align-items:end;
-}
 .book-art{position:relative}
-.book-art img{aspect-ratio:4/5}
-.book-cover-photo img{object-position:center}
-.book-spread-photo img{object-position:center}
-.book-art figcaption{
-  position:absolute;
-  left:12px;
-  bottom:12px;
-  margin:0;
-  padding:6px 9px;
-  background:rgba(245,239,228,.92);
-  border:1px solid var(--line);
-  color:var(--muted);
-  font-size:.72rem;
-  line-height:1;
+.book-cover-photo{
+  grid-column:1;
+  grid-row:1;
 }
-.purchase-panel{
-  position:sticky;
-  top:28px;
+.book-cover-photo img{
+  aspect-ratio:4/5;
+  object-position:center;
+}
+.book-details{
+  grid-column:2;
+  grid-row:1;
+  align-self:center;
   border-top:2px solid var(--ink);
   padding-top:24px;
+  max-width:520px;
+}
+.book-spread-photo{
+  grid-column:1 / -1;
+  grid-row:2;
+  max-width:860px;
+  justify-self:center;
+}
+.book-spread-photo img{
+  aspect-ratio:4/3;
+  object-position:center;
+}
+.book-art figcaption{
+  margin:10px 0 0;
+  color:var(--muted);
+  font-size:.8rem;
+  text-align:center;
 }
 .kicker{font-style:italic;font-size:1.08rem}
 .purchase-meta{
@@ -220,9 +225,15 @@ footer{
   .hero-art{min-height:0}
   .section{padding:72px 0}
   .section.alt{margin-left:-20px;margin-right:-20px;padding-left:20px;padding-right:20px}
-  .book-showcase,.about{grid-template-columns:1fr;gap:36px}
-  .book-visuals{grid-template-columns:1fr}
-  .purchase-panel{position:static}
+  .book-listing,.about{grid-template-columns:1fr;gap:36px}
+  .book-cover-photo,
+  .book-details,
+  .book-spread-photo{
+    grid-column:1;
+    grid-row:auto;
+  }
+  .book-details{max-width:none}
+  .book-spread-photo{max-width:none}
   .posts{grid-template-columns:1fr}
   footer{padding-left:20px;padding-right:20px}
 }
