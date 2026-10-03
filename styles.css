@@ -277,6 +277,11 @@ footer{
   color:var(--muted);
   font-size:.85rem;
 }
+.footer-contact{
+  font-size:.76rem;
+  opacity:.72;
+  text-decoration:none;
+}
 @media(max-width:760px){
   .site-header{align-items:flex-start;gap:14px;flex-direction:column}
   .brand-logo{width:min(330px,88vw)}
